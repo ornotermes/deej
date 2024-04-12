@@ -279,9 +279,7 @@ void handleButtonEvent(AceButton* button, uint8_t eventType, uint8_t buttonState
         break;
       }
       break;
-      case 2: //bottom right
-      //fully reserved for mic mute functions
-      break;
+      //case 2: //bottom right. fully reserved for mic mute functions
       case 3: //top left
       //long press reserved for switching layer
       switch (eventType) {
@@ -306,14 +304,7 @@ void handleButtonEvent(AceButton* button, uint8_t eventType, uint8_t buttonState
         break;
       }
       break;
-      case 5: //top right
-      //mostly reserved for mute functions, RepeatPressed or LongPressed could still be used
-      switch (eventType) {
-        case AceButton::kEventLongPressed:
-        sendKey(KEY_F19);
-        break;
-      }
-      break;
+      //case 5: //top right. reserved for mute functions, and starting deej
     }
     break;
 // -------- LAYER 1 -------- //
@@ -345,9 +336,7 @@ void handleButtonEvent(AceButton* button, uint8_t eventType, uint8_t buttonState
         break;
       }
       break;
-      case 2: //bottom right
-      //fully reserved for mic mute functions
-      break;
+      //case 2: //bottom right. fully reserved for mic mute functions
       case 3: //top left
       //long press reserved for switching layer
       switch (eventType) {
@@ -372,14 +361,7 @@ void handleButtonEvent(AceButton* button, uint8_t eventType, uint8_t buttonState
         break;
       }
       break;
-      case 5: //top right
-      //mostly reserved for mute functions, RepeatPressed or LongPressed could still be used
-      switch (eventType) {
-        case AceButton::kEventLongPressed:
-        sendKey(KEY_CUT);
-        break;
-      }
-      break;
+      //case 5: //top right. reserved for mute functions, and starting deej
     }
     break;
 // -------- LAYER 2 -------- //
