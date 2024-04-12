@@ -116,9 +116,9 @@ int runCommand(const String& cmd){
 void setup() { 
   Serial.begin(115200);
 
-  while (! Serial) //Make sure serial is up on devices with native USB
+  //while (! Serial) //Make sure serial is up on devices with native USB
 
-    for (int i = 0; i < NUM_LEDS; i++) {
+  for (int i = 0; i < NUM_LEDS; i++) {
     pinMode(ledOutputs[i],OUTPUT);
   }
 
