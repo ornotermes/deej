@@ -65,6 +65,11 @@ void setLeds (){
   digitalWrite(ledOutputs[LED_MUTE_MIC], (muteMic) ? LED_ON : LED_OFF);
 }
 
+int log2lin(int l){
+  const char exponent = 4; //try tweaking for your pots
+  return (1023*pow(l/1023.,exponent));
+}
+
 void setup() { 
   Serial.begin(115200);
 
@@ -97,6 +102,10 @@ void setup() {
 
 void loop() {
   updateSliderValues();
+
+  analogSliderValues[0] = log2lin(analogSliderValues[0]); //convert log pots to something more linear
+  analogSliderValues[1] = log2lin(analogSliderValues[1]); //convert log pots to something more linear
+
   #ifndef DEBUG_BUTTONS
     sendSliderValues(); // Actually send data (all the time)
   #endif
