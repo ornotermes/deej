@@ -228,7 +228,7 @@ void handleButtonEvent(AceButton* button, uint8_t eventType, uint8_t buttonState
   #endif
   
   //start with some things i want no matter what layer is selected
-  if (btn == 3 && eventType == AceButton::kEventLongPressed) { //long press on button 4 too change layer
+  if (btn == 5 && eventType == AceButton::kEventLongPressed) { //long press on button 4 too change layer
     layer++;
     if (layer > 3) layer = 0; //valid layers are 0-3
   } else if (btn == 5 && eventType == AceButton::kEventClicked) { //click 6 to mute output
@@ -236,10 +236,6 @@ void handleButtonEvent(AceButton* button, uint8_t eventType, uint8_t buttonState
     sendKey(KEY_MUTE);
   } else if (btn == 5 && eventType == AceButton::kEventDoubleClicked) { //Double click 6 to toggle LED only
     mute = !mute;
-  /*} else if (btn == 5 && eventType == AceButton::kEventRepeatPressed) { //Repeatedly fire when long pressing 6
-  Mouse.click();*/
-  } else if (btn == 5 && eventType == AceButton::kEventLongPressed) { //Start deej when long pressing 6
-    runCommand(CMD_DEEJ);
   } else if (btn == 2 && (eventType == AceButton::kEventClicked || eventType == AceButton::kEventPressed || eventType == AceButton::kEventReleased)) { //click or hold 3 to mute mic
     muteMic = !muteMic;
     sendKey(KEY_MUTE_MIC);
@@ -283,13 +279,15 @@ void handleButtonEvent(AceButton* button, uint8_t eventType, uint8_t buttonState
       break;
       //case 2: //bottom right. fully reserved for mic mute functions
       case 3: //top left
-      //long press reserved for switching layer
       switch (eventType) {
         case AceButton::kEventClicked:
         sendKey(KEY_LAUNCH8);
         break;
         case AceButton::kEventDoubleClicked:
-          runCommand(CMD_MEDIA_PLAYER);
+        runCommand(CMD_MEDIA_PLAYER);
+        break;
+        case AceButton::kEventLongPressed:
+        runCommand(CMD_DEEJ);
         break;
       }
       break;
