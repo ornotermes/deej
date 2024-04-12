@@ -313,51 +313,41 @@ void handleButtonEvent(AceButton* button, uint8_t eventType, uint8_t buttonState
       case 0: //bottom left
       switch (eventType) {
         case AceButton::kEventClicked:
-        sendKey(KEY_F21);
         break;
         case AceButton::kEventDoubleClicked:
-        sendKey(KEY_F22);
         break;
         case AceButton::kEventLongPressed:
-        sendKey(KEY_F23);
         break;
       }
       break;
       case 1: //bottom middle
       switch (eventType) {
         case AceButton::kEventClicked:
-        sendKey(KEY_F24);
         break;
         case AceButton::kEventDoubleClicked:
-        sendKey(KEY_EXECUTE);
         break;
         case AceButton::kEventLongPressed:
-        sendKey(KEY_HELP);
         break;
       }
       break;
       //case 2: //bottom right. fully reserved for mic mute functions
       case 3: //top left
-      //long press reserved for switching layer
       switch (eventType) {
         case AceButton::kEventClicked:
-        sendKey(KEY_MENU);
         break;
         case AceButton::kEventDoubleClicked:
-        sendKey(KEY_SELECT);
+        break;
+        case AceButton::kEventLongPressed:
         break;
       }
       break;
       case 4: //top middle
       switch (eventType) {
         case AceButton::kEventClicked:
-        sendKey(KEY_STOP);
         break;
         case AceButton::kEventDoubleClicked:
-        sendKey(KEY_AGAIN);
         break;
         case AceButton::kEventLongPressed:
-        sendKey(KEY_UNDO);
         break;
       }
       break;
@@ -366,11 +356,97 @@ void handleButtonEvent(AceButton* button, uint8_t eventType, uint8_t buttonState
     break;
 // -------- LAYER 2 -------- //
     case 2:
-
+    switch (btn) {
+      case 0: //bottom left
+      switch (eventType) {
+        case AceButton::kEventClicked:
+        break;
+        case AceButton::kEventDoubleClicked:
+        break;
+        case AceButton::kEventLongPressed:
+        break;
+      }
+      break;
+      case 1: //bottom middle
+      switch (eventType) {
+        case AceButton::kEventClicked:
+        break;
+        case AceButton::kEventDoubleClicked:
+        break;
+        case AceButton::kEventLongPressed:
+        break;
+      }
+      break;
+      //case 2: //bottom right. fully reserved for mic mute functions
+      case 3: //top left
+      switch (eventType) {
+        case AceButton::kEventClicked:
+        break;
+        case AceButton::kEventDoubleClicked:
+        break;
+        case AceButton::kEventLongPressed:
+        break;
+      }
+      break;
+      case 4: //top middle
+      switch (eventType) {
+        case AceButton::kEventClicked:
+        break;
+        case AceButton::kEventDoubleClicked:
+        break;
+        case AceButton::kEventLongPressed:
+        break;
+      }
+      break;
+      //case 5: //top right. reserved for mute functions, and starting deej
+    }
     break;
-// -------- LAYER 0 -------- //
+// -------- LAYER 3 -------- //
     case 3:
-
+    switch (btn) {
+      case 0: //bottom left
+      switch (eventType) {
+        case AceButton::kEventClicked:
+        break;
+        case AceButton::kEventDoubleClicked:
+        break;
+        case AceButton::kEventLongPressed:
+        break;
+      }
+      break;
+      case 1: //bottom middle
+      switch (eventType) {
+        case AceButton::kEventClicked:
+        break;
+        case AceButton::kEventDoubleClicked:
+        break;
+        case AceButton::kEventLongPressed:
+        break;
+      }
+      break;
+      //case 2: //bottom right. fully reserved for mic mute functions
+      case 3: //top left
+      switch (eventType) {
+        case AceButton::kEventClicked:
+        break;
+        case AceButton::kEventDoubleClicked:
+        break;
+        case AceButton::kEventLongPressed:
+        break;
+      }
+      break;
+      case 4: //top middle
+      switch (eventType) {
+        case AceButton::kEventClicked:
+        break;
+        case AceButton::kEventDoubleClicked:
+        break;
+        case AceButton::kEventLongPressed:
+        break;
+      }
+      break;
+      //case 5: //top right. reserved for mute functions, and starting deej
+    }
     break;
     default:
     layer = 0; //something has gone wrong with layers, go back to 0
