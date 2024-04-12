@@ -17,9 +17,21 @@ using namespace ace_button;
 //#define DEBUG_BUTTONS
 //#define DEBUG_POTS
 
-#define LINUX
-//#define MACOS
-//#define WINDOWS
+#define LINUX /* use Linux keyboard shortcuts */
+//#define MACOS /* use MacOS keyboard shortcuts !NOT WORKING! */
+//#define WINDOWS /* use Windows keyboard shortcuts */
+
+/* LINUX:
+Copy your config to your home dir: cp ~/go/pkg/mod/github.com/omriharel/deej@v0.9.10/config.yaml ~/
+Link the deej binary to your home dir: ln -s ~/go/pkg/mod/github.com/omriharel/deej@v0.9.10/deej-release ~/deej
+*/
+#define CMD_DEEJ "./deej"
+/* WINDOWS:
+Add deej.exe to a folder that's in your systems path. Untested, let me know if it works.
+*/
+//#define CMD_DEEJ "deej.exe"
+
+#define CMD_MEDIA_PLAYER "flatpak run com.plexamp.Plexamp" //command for your media pleyer of choice
 
 const int NUM_SLIDERS = 5;
 const int analogInputs[NUM_SLIDERS] = {A0, A1, A2, A3, A6};
@@ -74,6 +86,31 @@ void setLeds (){
 int log2lin(int l){
   const char exponent = 4; //try tweaking for your pots
   return (1023*pow(l/1023.,exponent));
+}
+
+int runCommand(const String& cmd){
+         #ifdef LINUX
+        Keyboard.press(KEY_LEFT_ALT);
+        Keyboard.press(KEY_F2);
+        delay(500);
+        Keyboard.releaseAll();
+        Keyboard.println(cmd);
+        #endif
+        
+        #ifdef WINDOWS
+        Keyboard.press(KEY_LEFT_GUI);
+        Keyboard.write("r");
+        delay(500);
+        Keyboard.releaseAll();
+        Keyboard.println(cmd);
+        #endif
+
+        #ifdef MACOS
+        #warning "Building for MacOS!"
+        /* MACOS
+        I leave this for someone with some skin in the game.
+        */
+        #endif
 }
 
 void setup() { 
@@ -202,42 +239,7 @@ void handleButtonEvent(AceButton* button, uint8_t eventType, uint8_t buttonState
   /*} else if (btn == 5 && eventType == AceButton::kEventRepeatPressed) { //Repeatedly fire when long pressing 6
   Mouse.click();*/
   } else if (btn == 5 && eventType == AceButton::kEventLongPressed) { //Start deej when long pressing 6
-
-  #ifdef LINUX
-  #warning "Building for Linux!"
-  /* LINUX:
-  Copy your config to your home dir:
-    cp ~/go/pkg/mod/github.com/omriharel/deej@v0.9.10/config.yaml ~/
-  Link the deej binary to your home dir:
-    ln -s ~/go/pkg/mod/github.com/omriharel/deej@v0.9.10/deej-release ~/deej
-  */
-  Keyboard.press(KEY_LEFT_ALT);
-  Keyboard.press(KEY_F2);
-  delay(500);
-  Keyboard.releaseAll();
-  Keyboard.println("./deej");
-  #endif
-  
-  #ifdef WINDOWS
-  #warning "Building for Windows!"
-  /* WINDOWS:
-    add deej.exe to a folder that's in your systems path
-    Untested, let me know if it works.
-  */
-  Keyboard.press(KEY_LEFT_GUI);
-  Keyboard.write("r");
-  delay(500);
-  Keyboard.releaseAll();
-  Keyboard.println("deej");
-  #endif
-
-  #ifdef MACOS
-  #warning "Building for MacOS!"
-  /* MACOS
-  I leave this for someone with some skin in the game.
-  */
-  #endif
-
+    runCommand(CMD_DEEJ);
   } else if (btn == 2 && (eventType == AceButton::kEventClicked || eventType == AceButton::kEventPressed || eventType == AceButton::kEventReleased)) { //click or hold 3 to mute mic
     muteMic = !muteMic;
     sendKey(KEY_MUTE_MIC);
@@ -287,7 +289,7 @@ void handleButtonEvent(AceButton* button, uint8_t eventType, uint8_t buttonState
         sendKey(KEY_LAUNCH8);
         break;
         case AceButton::kEventDoubleClicked:
-        sendKey(KEY_LAUNCH9);
+          runCommand(CMD_MEDIA_PLAYER);
         break;
       }
       break;
