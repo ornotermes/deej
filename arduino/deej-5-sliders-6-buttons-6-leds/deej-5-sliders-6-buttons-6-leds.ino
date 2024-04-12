@@ -12,6 +12,9 @@
 #include <AceButton.h>
 using namespace ace_button;
 
+//#define DEBUG_BUTTONS
+//#define DEBUG_POTS
+
 const int NUM_SLIDERS = 5;
 const int analogInputs[NUM_SLIDERS] = {A0, A1, A2, A3, A6};
 
@@ -94,8 +97,12 @@ void setup() {
 
 void loop() {
   updateSliderValues();
-  //sendSliderValues(); // Actually send data (all the time)
-  //printSliderValues(); // For debug
+  #ifndef DEBUG_BUTTONS
+    sendSliderValues(); // Actually send data (all the time)
+  #endif
+  #ifdef DEBUG_POTS
+    printSliderValues(); // For debug
+  #endif
 
   button1.check();
   button2.check();
@@ -156,15 +163,17 @@ void handleButtonEvent(AceButton* button, uint8_t eventType, uint8_t buttonState
 
   }
   
-  // Print out a message for all events, for both buttons.
-  Serial.print(F("button: "));
-  Serial.print(btn);
-  Serial.print("(");
-  Serial.print(pin);
-  Serial.print(F("); eventType: "));
-  Serial.print(AceButton::eventName(eventType));
-  Serial.print(F("; buttonState: "));
-  Serial.println(buttonState);
+  #ifdef DEBUG_BUTTONS
+    // Print out a message for all events, for both buttons.
+    Serial.print(F("button: "));
+    Serial.print(btn);
+    Serial.print("(");
+    Serial.print(pin);
+    Serial.print(F("); eventType: "));
+    Serial.print(AceButton::eventName(eventType));
+    Serial.print(F("; buttonState: "));
+    Serial.println(buttonState);
+  #endif
   
   //start with some things i want no matter what layer is selected
   if (btn == 3 && eventType == AceButton::kEventLongPressed) { //long press on button 4 too change layer
