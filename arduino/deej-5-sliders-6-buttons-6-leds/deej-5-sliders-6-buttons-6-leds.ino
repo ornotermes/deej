@@ -55,7 +55,7 @@ bool muteMic = 0;
 bool mouseSpam = 0; //spam mouse clicks every in main loop if true
 bool mouseHold = 0; // hold the mouse button down
 #define KEYBOARD_HOLD 10 //how long to hold a key pressed before releasing
-#define CLICK_COOLDOWN 25 //how long to dalay to make clicks register properly, in my case 25ms
+#define CLICK_COOLDOWN 50 //how long to dalay to make clicks register properly, in my case 25ms
 
 const int NUM_LEDS = 6;
 const int ledOutputs[NUM_LEDS] = {10, 9, 6, 14/* No PWN */, 3, 5};
