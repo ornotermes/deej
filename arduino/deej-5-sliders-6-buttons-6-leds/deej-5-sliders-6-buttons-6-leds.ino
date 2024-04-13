@@ -40,6 +40,7 @@ int analogSliderValues[NUM_SLIDERS];
 
 const int NUM_BUTTONS = 6;
 const int buttonInputs[NUM_BUTTONS] = {16, 8, 7, 15, 2, 0};
+bool btnLongPress[NUM_BUTTONS];
 AceButton button1(buttonInputs[0]);
 AceButton button2(buttonInputs[1]);
 AceButton button3(buttonInputs[2]);
@@ -226,6 +227,12 @@ void handleButtonEvent(AceButton* button, uint8_t eventType, uint8_t buttonState
     Serial.print(F("; buttonState: "));
     Serial.println(buttonState);
   #endif
+
+  if (eventType == AceButton::kEventLongPressed){ //when any button is long pressed
+    btnLongPress[btn] = 1; //set a flag that it's
+  } else if (eventType == AceButton::kEventReleased){ //when any button is released
+    btnLongPress[btn] = 0; //clear the flag
+  } //this let you do specifick things if say a button is long pressed and another is clicked, kinda like a shift key
   
   //start with some things i want no matter what layer is selected
   if (btn == 5 && eventType == AceButton::kEventLongPressed) { //long press on button 4 too change layer
