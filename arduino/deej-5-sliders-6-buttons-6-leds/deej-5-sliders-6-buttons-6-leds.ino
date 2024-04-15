@@ -1,3 +1,7 @@
+#include <MIDIUSB.h>
+#define MIDI_CHANNEL 0 //what midi channel to use, comment out to disable midi output
+#define ANALOG_RESOLUTION 10 //ADC resolution, default: 10
+
 #include <Mouse.h>
 
 #include <Keyboard.h>
@@ -157,6 +161,9 @@ void loop() {
   #ifdef DEBUG_POTS
     printSliderValues(); // For debug
   #endif
+  #ifdef MIDI_CHANNEL
+    sendSliderValuesMIDI();
+  #endif
 
   button1.check();
   button2.check();
@@ -197,6 +204,22 @@ void sendSliderValues() {
   }
   
   Serial.println(builtString);
+}
+
+void sendValueMIDI(uint8_t slider, uint8_t value) {
+  // Send a slider value over MIDI.
+  // Byte 0 is event type, in this case 0x09 for note on.
+  // Byte 1 is event type in upper nibble, and MIDI channel on lower nibble.
+  // Byte 2 is note number, slider in our case, 7 bit value.
+  // Byte 3 is velocity, the value of the slider for us, also 7 bits.
+  midiEventPacket_t data = {0x09, 0x90|MIDI_CHANNEL, slider, value};
+  MidiUSB.sendMIDI(data);
+}
+
+void sendSliderValuesMIDI() {
+  for (int i = 0; i < NUM_SLIDERS; i++) {
+    sendValueMIDI(i & 0x7f,(analogSliderValues[i]>>(ANALOG_RESOLUTION - 7)) & 0x7f);
+  }
 }
 
 void printSliderValues() {
