@@ -119,7 +119,9 @@ func (midio *MidiIO) Start() error {
 func (midio *MidiIO) Stop() {
 	if midio.connected {
 		midio.logger.Debug("Shutting down serial connection")
-		midio.stopChannel <- true
+		// midio.stopChannel <- true
+		// since we aren't spinning up any threads, we can just directly call stop. I think.
+		midio.close(midio.logger)
 	} else {
 		midio.logger.Debug("Not currently connected, nothing to stop")
 	}
