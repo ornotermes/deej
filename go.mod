@@ -17,6 +17,7 @@ require (
 	github.com/moutend/go-wca v0.1.2-0.20190422112502-0fa027b3d89a
 	github.com/spf13/viper v1.7.1
 	github.com/thoas/go-funk v0.7.0
+	gitlab.com/gomidi/midi/v2 v2.1.7 // indirect
 	go.uber.org/zap v1.15.0
 	golang.org/x/sys v0.0.0-20200501145240-bc7a7d42d5c3 // indirect
 )
