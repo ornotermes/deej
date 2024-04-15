@@ -243,7 +243,7 @@ void handleButtonEvent(AceButton* button, uint8_t eventType, uint8_t buttonState
   if (btn == 5 && eventType == AceButton::kEventLongPressed) { //long press on button 4 too change layer
     layer++;
     if (layer > 3) layer = 0; //valid layers are 0-3
-  } else if (btnLongPress[5] && eventType == AceButton::kEventPressed /*&& (btn == 0 || btn == 1 || btn == 3 || btn == 4)*/){ //if button 6 is long pressed and held, press button 1,2,4, or 5 to change to that layer
+  } else if (btnLongPress[5] && eventType == AceButton::kEventPressed){ //if button 6 is long pressed and held, this catches any further button presses
     if (btn == 3) layer = 0;
     if (btn == 4) layer = 1;
     if (btn == 0) layer = 2;
