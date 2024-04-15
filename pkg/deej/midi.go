@@ -249,7 +249,7 @@ func (midio *MidiIO) handleMidiIn(logger *zap.SugaredLogger) func(msg midi.Messa
 			}
 		}
 
-		dirtyFloat := float32(velocity) / 1023.0 // this will need to change probably
+		dirtyFloat := float32(velocity) / 127.0
 
 		// normalize it to an actual volume scalar between 0.0 and 1.0 with 2 points of precision
 		normalizedScalar := util.NormalizeScalar(dirtyFloat)
