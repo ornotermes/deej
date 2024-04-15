@@ -57,6 +57,7 @@ bool mouseSpam = 0; //spam mouse clicks every in main loop if true
 bool mouseHold = 0; // hold the mouse button down
 #define KEYBOARD_HOLD 10 //how long to hold a key pressed before releasing
 #define CLICK_COOLDOWN 50 //how long to dalay to make clicks register properly, in my case 25ms
+uint8_t clickCounter = 0; //make the main loop shorter when click spamming to avid missing double clicks
 
 const int NUM_LEDS = 6;
 const int ledOutputs[NUM_LEDS] = {10, 9, 6, 14/* No PWN */, 3, 5};
@@ -167,9 +168,13 @@ void loop() {
   setLeds();
 
   if (mouseSpam) {
-    Mouse.click();
-    delay(CLICK_COOLDOWN);
-  }
+    const uint8_t count = 10;
+    if(clickCounter == count) { //click every count times
+      Mouse.click();
+      delay(CLICK_COOLDOWN/count);
+      clickCounter = 0;
+    } else clickCounter++;
+  } else clickCounter = 0; //reset counter if we're not spamming
   
   delay(1);
 }
