@@ -57,6 +57,7 @@ void handleEvent(AceButton*, uint8_t, uint8_t);
 uint8_t layer = 0; //Macro keypad layer
 bool mute = 0;
 bool muteMic = 0;
+bool pauseOutput = 0; //pause output to deej (to prevent wake lock)
 bool mouseSpam = 0; //spam mouse clicks every in main loop if true
 bool mouseHold = 0; // hold the mouse button down
 #define KEYBOARD_HOLD 10 //how long to hold a key pressed before releasing
@@ -65,6 +66,7 @@ uint8_t clickCounter = 0; //make the main loop shorter when click spamming to av
 
 const int NUM_LEDS = 6;
 const int ledOutputs[NUM_LEDS] = {10, 9, 6, 14/* No PWN */, 3, 5};
+uint8_t ledBlink = 0; //a led blink variable increased in main loop, can be used to create different blink patterns
 #define LED_ON 0
 #define LED_OFF 1
 #define LED_LAYER_0 3
@@ -81,10 +83,12 @@ void sendKey (uint8_t key, uint8_t raw = 0) {
 }
 
 void setLeds (){
-  digitalWrite(ledOutputs[LED_LAYER_0], (layer==0) ? LED_ON : LED_OFF);
-  digitalWrite(ledOutputs[LED_LAYER_1], (layer==1) ? LED_ON : LED_OFF);
-  digitalWrite(ledOutputs[LED_LAYER_2], (layer==2) ? LED_ON : LED_OFF);
-  digitalWrite(ledOutputs[LED_LAYER_3], (layer==3) ? LED_ON : LED_OFF);
+  bool ledBlinkOn = ledBlink < 128 ? LED_ON : LED_OFF; // create a bink pattern
+  bool ledLayerStatus = pauseOutput ? ledBlinkOn : LED_ON; // if output is paused use blink pattern, else just have led on
+  digitalWrite(ledOutputs[LED_LAYER_0], (layer==0) ? ledLayerStatus : LED_OFF);
+  digitalWrite(ledOutputs[LED_LAYER_1], (layer==1) ? ledLayerStatus : LED_OFF);
+  digitalWrite(ledOutputs[LED_LAYER_2], (layer==2) ? ledLayerStatus : LED_OFF);
+  digitalWrite(ledOutputs[LED_LAYER_3], (layer==3) ? ledLayerStatus : LED_OFF);
   digitalWrite(ledOutputs[LED_MUTE], (mute) ? LED_ON : LED_OFF);
   digitalWrite(ledOutputs[LED_MUTE_MIC], (muteMic) ? LED_ON : LED_OFF);
 }
@@ -155,14 +159,18 @@ void loop() {
   analogSliderValues[0] = log2lin(analogSliderValues[0]); //convert log pots to something more linear
   analogSliderValues[1] = log2lin(analogSliderValues[1]); //convert log pots to something more linear
 
-  #ifndef DEBUG_BUTTONS
-    sendSliderValues(); // Actually send data (all the time)
-  #endif
+
   #ifdef DEBUG_POTS
     printSliderValues(); // For debug
   #endif
+
+  #ifndef DEBUG_BUTTONS
+  #ifndef MIDI_CHANNEL
+    if (pauseOutput==0) sendSliderValues(); // Actually send data (all the time)
+  #endif
+  #endif
   #ifdef MIDI_CHANNEL
-    sendSliderValuesMIDI();
+    if (pauseOutput==0) sendSliderValuesMIDI();
   #endif
 
   button1.check();
@@ -182,6 +190,8 @@ void loop() {
       clickCounter = 0;
     } else clickCounter++;
   } else clickCounter = 0; //reset counter if we're not spamming
+  
+  ledBlink++; //increase the variable used to create blink patterns, the blink speed is controlled but loop time
   
   delay(1);
 }
@@ -257,6 +267,9 @@ void handleButtonEvent(AceButton* button, uint8_t eventType, uint8_t buttonState
     Serial.print(AceButton::eventName(eventType));
     Serial.print(F("; buttonState: "));
     Serial.println(buttonState);
+    Serial.print("pauseOutput = " ); Serial.print(pauseOutput); Serial.print("; ");
+    Serial.print("btnLongPress[5] = " ); Serial.print(btnLongPress[5]); Serial.print("; ");
+    Serial.println("");
   #endif
 
   if (eventType == AceButton::kEventLongPressed){ //when any button is long pressed
@@ -264,16 +277,23 @@ void handleButtonEvent(AceButton* button, uint8_t eventType, uint8_t buttonState
   } else if (eventType == AceButton::kEventReleased){ //when any button is released
     btnLongPress[btn] = 0; //clear the flag
   } //this let you do specifick things if say a button is long pressed and another is clicked, kinda like a shift key
+
+  if (pauseOutput == 1 && eventType == AceButton::kEventPressed) { //unpause the output whenever a button is pressed
+    pauseOutput = 0;
+  }
   
   //start with some things i want no matter what layer is selected
   if (btn == 5 && eventType == AceButton::kEventLongPressed) { //long press on button 4 too change layer
     layer++;
     if (layer > 3) layer = 0; //valid layers are 0-3
-  } else if (btnLongPress[5] && eventType == AceButton::kEventPressed){ //if button 6 is long pressed and held, this catches any further button presses
-    if (btn == 3) layer = 0;
-    if (btn == 4) layer = 1;
-    if (btn == 0) layer = 2;
-    if (btn == 1) layer = 3;
+  } else if (btnLongPress[5]) { //if button 6 is long pressed and held this catches any further button presses
+      if (eventType == AceButton::kEventPressed){ //but we only really care about button presse, the rest is ignored
+        if (btn == 3) layer = 0;
+        if (btn == 4) layer = 1;
+        if (btn == 0) layer = 2;
+        if (btn == 1) layer = 3;
+        if (btn == 2) { pauseOutput = 1; layer--; }
+      }
   } else if (btn == 5 && eventType == AceButton::kEventClicked) { //click 6 to mute output
     mute = !mute;
     sendKey(KEY_MUTE);
