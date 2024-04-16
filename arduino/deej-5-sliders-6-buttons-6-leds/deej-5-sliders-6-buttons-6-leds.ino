@@ -206,20 +206,23 @@ void sendSliderValues() {
   Serial.println(builtString);
 }
 
-void sendValueMIDI(uint8_t slider, uint8_t value) {
-  // Send a slider value over MIDI.
+void sendSliderValuesMIDI() {
+  // Send slider values over MIDI.
   // Byte 0 is event type, in this case 0x09 for note on.
   // Byte 1 is event type in upper nibble, and MIDI channel on lower nibble.
   // Byte 2 is note number, slider in our case, 7 bit value.
   // Byte 3 is velocity, the value of the slider for us, also 7 bits.
-  midiEventPacket_t data = {0x09, 0x90|MIDI_CHANNEL, slider, value};
-  MidiUSB.sendMIDI(data);
-}
-
-void sendSliderValuesMIDI() {
-  for (int i = 0; i < NUM_SLIDERS; i++) {
-    sendValueMIDI(i & 0x7f,(analogSliderValues[i]>>(ANALOG_RESOLUTION - 7)) & 0x7f);
+  uint8_t data[NUM_SLIDERS * 4];
+  for (int i = 0; i < NUM_SLIDERS * 4; i+=4) {
+    data[i+0] = 0x09;
+    data[i+1] = 0x90 | MIDI_CHANNEL;
+    data[i+2] = i>>2;
+    data[i+3] = (analogSliderValues[i>>2]>>(ANALOG_RESOLUTION - 7)) & 0x7f;
   }
+  //modified MIDIUSB according to https://github.com/arduino-libraries/MIDIUSB/issues/46
+  //if isAvailible > 0 there is something not accepting data.
+  if (MidiUSB.isAvailible()==0) MidiUSB.write(data, NUM_SLIDERS * 4);
+  MidiUSB.flush();
 }
 
 void printSliderValues() {
