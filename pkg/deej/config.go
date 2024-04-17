@@ -66,7 +66,7 @@ const (
 	defaultCOMPort     = "COM4"
 	defaultBaudRate    = 9600
 	defaultMidiPort    = 0
-	defaultMidiChannel = 1
+	defaultMidiChannel = 0
 )
 
 // has to be defined as a non-constant because we're using path.Join
