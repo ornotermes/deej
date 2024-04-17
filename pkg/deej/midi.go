@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"gitlab.com/gomidi/midi/v2"
@@ -65,6 +66,13 @@ func NewMidiIO(deej *Deej, logger *zap.SugaredLogger) (*MidiIO, error) {
 
 // Start attempts to connect to our arduino chip
 func (midio *MidiIO) Start() error {
+
+	devices := strings.Split(midi.GetOutPorts().String(), "\n")
+	for i := 0; i < len(devices); i++ {
+		if len(devices[i]) > 0 {
+			midio.logger.Infow("MIDI device found: ", "info", devices[i])
+		}
+	}
 
 	// don't allow multiple concurrent connections
 	if midio.connected {
