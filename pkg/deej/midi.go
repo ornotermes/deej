@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"gitlab.com/gomidi/midi/v2"
 	"gitlab.com/gomidi/midi/v2/drivers"
@@ -14,7 +15,10 @@ import (
 
 // MidiIO provides a deej-aware abstraction layer to managing serial I/O
 type MidiIO struct {
-	midiChannel int
+	port          int
+	channel       int
+	deviceName    string
+	useDeviceName bool
 
 	deej   *Deej
 	logger *zap.SugaredLogger
@@ -32,16 +36,8 @@ type MidiIO struct {
 	onStop              func()
 }
 
-// SliderMoveEvent represents a single slider move captured by deej
-// type SliderMoveEvent struct {
-// 	SliderID     int
-// 	PercentValue float32
-// }
-
-// var expectedLinePattern = regexp.MustCompile(`^\d{1,4}(\|\d{1,4})*\r\n$`)
-
-// NewSerialIO creates a MidiIO instance that uses the provided deej
-// instance's connection info to establish communications with the arduino chip
+// NewMidiIO creates a MidiIO instance that uses the provided deej
+// instance's connection info to listen for midi events
 func NewMidiIO(deej *Deej, logger *zap.SugaredLogger) (*MidiIO, error) {
 	logger = logger.Named("midi")
 
@@ -52,14 +48,15 @@ func NewMidiIO(deej *Deej, logger *zap.SugaredLogger) (*MidiIO, error) {
 		connected:           false,
 		conn:                nil,
 		sliderMoveConsumers: []chan SliderMoveEvent{},
-		midiChannel:         0,
+		port:                deej.config.MidiConnectionInfo.Port,
+		channel:             deej.config.MidiConnectionInfo.Channel,
+		deviceName:          deej.config.MidiConnectionInfo.DeviceName,
+		useDeviceName:       deej.config.MidiConnectionInfo.UseDeviceName,
 	}
 
 	logger.Debug("Created midi i/o instance")
 
-	// respond to config changes
-	// can be re-enabled later
-	// midio.setupOnConfigReload()
+	midio.setupOnConfigReload()
 
 	return midio, nil
 }
@@ -73,21 +70,12 @@ func (midio *MidiIO) Start() error {
 		return errors.New("midi: connection already active")
 	}
 
-	// set minimum read size according to platform (0 for windows, 1 for linux)
-	// this prevents a rare bug on windows where serial reads get congested,
-	// resulting in significant lag
-	// minimumReadSize := 0
-	// if util.Linux() {
-	// 	minimumReadSize = 1
-	// }
-
-	// midio.logger.Debugw("Attempting serial connection",
-	// 	"comPort", midio.connOptions.PortName,
-	// 	"baudRate", midio.connOptions.BaudRate,
-	// 	"minReadSize", minimumReadSize)
-
 	var err error
-	midio.conn, err = midi.InPort(midio.midiChannel)
+	if midio.useDeviceName {
+		midio.conn, err = midi.FindInPort(midio.deviceName)
+	} else {
+		midio.conn, err = midi.InPort(midio.port)
+	}
 	if err != nil {
 
 		// might need a user notification here, TBD
@@ -95,7 +83,10 @@ func (midio *MidiIO) Start() error {
 		return fmt.Errorf("open midi port connection: %w", err)
 	}
 
-	namedLogger := midio.logger.Named("midi port " + strconv.Itoa(midio.midiChannel))
+	namedLogger := midio.logger.Named("midi port " + strconv.Itoa(midio.port))
+	if midio.useDeviceName {
+		namedLogger = midio.logger.Named("midi device " + midio.deviceName)
+	}
 
 	stopFn, listenErr := midi.ListenTo(midio.conn, midio.handleMidiIn(namedLogger))
 	if listenErr != nil {
@@ -136,46 +127,56 @@ func (midio *MidiIO) SubscribeToSliderMoveEvents() chan SliderMoveEvent {
 	return ch
 }
 
-// func (midio *MidiIO) setupOnConfigReload() {
-// 	configReloadedChannel := midio.deej.config.SubscribeToChanges()
+func (midio *MidiIO) setupOnConfigReload() {
+	configReloadedChannel := midio.deej.config.SubscribeToChanges()
 
-// 	const stopDelay = 50 * time.Millisecond
+	const stopDelay = 50 * time.Millisecond
 
-// 	go func() {
-// 		for {
-// 			select {
-// 			case <-configReloadedChannel:
+	go func() {
+		for {
+			select {
+			case <-configReloadedChannel:
 
-// 				// make any config reload unset our slider number to ensure process volumes are being re-set
-// 				// (the next read line will emit SliderMoveEvent instances for all sliders)\
-// 				// this needs to happen after a small delay, because the session map will also re-acquire sessions
-// 				// whenever the config file is reloaded, and we don't want it to receive these move events while the map
-// 				// is still cleared. this is kind of ugly, but shouldn't cause any issues
-// 				go func() {
-// 					<-time.After(stopDelay)
-// 					midio.lastKnownNumSliders = 0
-// 				}()
+				// make any config reload unset our slider number to ensure process volumes are being re-set
+				// (the next read line will emit SliderMoveEvent instances for all sliders)\
+				// this needs to happen after a small delay, because the session map will also re-acquire sessions
+				// whenever the config file is reloaded, and we don't want it to receive these move events while the map
+				// is still cleared. this is kind of ugly, but shouldn't cause any issues
+				go func() {
+					<-time.After(stopDelay)
+					midio.lastKnownNumSliders = 0
+				}()
 
-// 				// if connection params have changed, attempt to stop and start the connection
-// 				if midio.deej.config.ConnectionInfo.COMPort != midio.connOptions.PortName ||
-// 					uint(midio.deej.config.ConnectionInfo.BaudRate) != midio.connOptions.BaudRate {
+				// if connection params have changed, attempt to stop and start the connection
+				midiConfig := midio.deej.config.MidiConnectionInfo
+				updatedConfig := (midiConfig.Channel != midio.channel ||
+					midiConfig.UseDeviceName != midio.useDeviceName ||
+					midiConfig.DeviceName != midio.deviceName ||
+					midiConfig.Port != midio.port)
 
-// 					midio.logger.Info("Detected change in connection parameters, attempting to renew connection")
-// 					midio.Stop()
+				if updatedConfig {
 
-// 					// let the connection close
-// 					<-time.After(stopDelay)
+					midio.logger.Info("Detected change in connection parameters, attempting to renew connection")
+					midio.Stop()
 
-// 					if err := midio.Start(); err != nil {
-// 						midio.logger.Warnw("Failed to renew connection after parameter change", "error", err)
-// 					} else {
-// 						midio.logger.Debug("Renewed connection successfully")
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}()
-// }
+					midio.port = midiConfig.Port
+					midio.channel = midiConfig.Channel
+					midio.deviceName = midiConfig.DeviceName
+					midio.useDeviceName = midiConfig.UseDeviceName
+
+					// let the connection close
+					<-time.After(stopDelay)
+
+					if err := midio.Start(); err != nil {
+						midio.logger.Warnw("Failed to renew connection after parameter change", "error", err)
+					} else {
+						midio.logger.Debug("Renewed connection successfully")
+					}
+				}
+			}
+		}
+	}()
+}
 
 func (midio *MidiIO) close(logger *zap.SugaredLogger) {
 	midio.onStop()
@@ -184,34 +185,6 @@ func (midio *MidiIO) close(logger *zap.SugaredLogger) {
 	midio.conn = nil
 	midio.connected = false
 }
-
-// func (midio *MidiIO) readLine(logger *zap.SugaredLogger, reader *bufio.Reader) chan string {
-// 	ch := make(chan string)
-
-// 	go func() {
-// 		for {
-// 			line, err := reader.ReadString('\n')
-// 			if err != nil {
-
-// 				if midio.deej.Verbose() {
-// 					logger.Warnw("Failed to read line from serial", "error", err, "line", line)
-// 				}
-
-// 				// just ignore the line, the read loop will stop after this
-// 				return
-// 			}
-
-// 			if midio.deej.Verbose() {
-// 				logger.Debugw("Read new line", "line", line)
-// 			}
-
-// 			// deliver the line to the channel
-// 			ch <- line
-// 		}
-// 	}()
-
-// 	return ch
-// }
 
 func (midio *MidiIO) handleMidiIn(logger *zap.SugaredLogger) func(msg midi.Message, timestamp int32) {
 
@@ -225,8 +198,8 @@ func (midio *MidiIO) handleMidiIn(logger *zap.SugaredLogger) func(msg midi.Messa
 		var channel, slider, velocity uint8
 		msg.GetNoteOn(&channel, &slider, &velocity)
 		// update our slider count, if needed - this will send slider move events for all
-		if channel != uint8(midio.midiChannel) {
-			logger.Warnf("Expected channel %d, but got channel %d", midio.midiChannel, channel)
+		if channel != uint8(midio.channel) {
+			logger.Warnf("Expected channel %d, but got channel %d", midio.channel, channel)
 			return
 		}
 		if slider >= uint8(midio.lastKnownNumSliders) {
