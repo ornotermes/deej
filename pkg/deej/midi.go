@@ -74,6 +74,11 @@ func (midio *MidiIO) Start() error {
 		}
 	}
 
+	midio.port = midio.deej.config.MidiConnectionInfo.Port
+	midio.channel = midio.deej.config.MidiConnectionInfo.Channel
+	midio.deviceName = midio.deej.config.MidiConnectionInfo.DeviceName
+	midio.useDeviceName = midio.deej.config.MidiConnectionInfo.UseDeviceName
+
 	// don't allow multiple concurrent connections
 	if midio.connected {
 		midio.logger.Warn("Already connected, can't start another without closing first")
