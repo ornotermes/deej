@@ -25,3 +25,9 @@ baud_rate: 9600
 # adjust the amount of signal noise reduction depending on your hardware quality
 # supported values are "low" (excellent hardware), "default" (regular hardware) or "high" (bad, noisy hardware)
 noise_reduction: default
+
+# configure these for midi use.
+# midi:
+#   port: 0
+#   channel: 1
+#   device_name: "my device name"

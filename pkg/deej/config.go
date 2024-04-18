@@ -22,6 +22,12 @@ type CanonicalConfig struct {
 		COMPort  string
 		BaudRate int
 	}
+	MidiConnectionInfo struct {
+		Port          int
+		Channel       int
+		DeviceName    string
+		UseDeviceName bool
+	}
 
 	InvertSliders bool
 
@@ -53,9 +59,14 @@ const (
 	configKeyCOMPort             = "com_port"
 	configKeyBaudRate            = "baud_rate"
 	configKeyNoiseReductionLevel = "noise_reduction"
+	configKeyMidiPort            = "midi.port"
+	configKeyMidiChannel         = "midi.channel"
+	configKeyMidiDeviceName      = "midi.device_name"
 
-	defaultCOMPort  = "COM4"
-	defaultBaudRate = 9600
+	defaultCOMPort     = "COM4"
+	defaultBaudRate    = 9600
+	defaultMidiPort    = 0
+	defaultMidiChannel = 0
 )
 
 // has to be defined as a non-constant because we're using path.Join
@@ -89,6 +100,9 @@ func NewConfig(logger *zap.SugaredLogger, notifier Notifier) (*CanonicalConfig, 
 	userConfig.SetDefault(configKeyInvertSliders, false)
 	userConfig.SetDefault(configKeyCOMPort, defaultCOMPort)
 	userConfig.SetDefault(configKeyBaudRate, defaultBaudRate)
+
+	userConfig.SetDefault(configKeyMidiChannel, defaultMidiChannel)
+	userConfig.SetDefault(configKeyMidiPort, defaultMidiPort)
 
 	internalConfig := viper.New()
 	internalConfig.SetConfigName(internalConfigName)
@@ -146,6 +160,7 @@ func (cc *CanonicalConfig) Load() error {
 	cc.logger.Infow("Config values",
 		"sliderMapping", cc.SliderMapping,
 		"connectionInfo", cc.ConnectionInfo,
+		"midiConnectionInfo", cc.MidiConnectionInfo,
 		"invertSliders", cc.InvertSliders)
 
 	return nil
@@ -238,6 +253,15 @@ func (cc *CanonicalConfig) populateFromVipers() error {
 
 	cc.InvertSliders = cc.userConfig.GetBool(configKeyInvertSliders)
 	cc.NoiseReductionLevel = cc.userConfig.GetString(configKeyNoiseReductionLevel)
+	cc.MidiConnectionInfo.Port = cc.userConfig.GetInt(configKeyMidiPort)
+	cc.MidiConnectionInfo.Channel = cc.userConfig.GetInt(configKeyMidiChannel)
+	if cc.userConfig.IsSet(configKeyMidiDeviceName) {
+		cc.MidiConnectionInfo.DeviceName = cc.userConfig.GetString(configKeyMidiDeviceName)
+		cc.MidiConnectionInfo.UseDeviceName = true
+	} else {
+		cc.MidiConnectionInfo.DeviceName = ""
+		cc.MidiConnectionInfo.UseDeviceName = false
+	}
 
 	cc.logger.Debug("Populated config fields from vipers")
 
