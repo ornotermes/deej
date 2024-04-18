@@ -30,4 +30,4 @@ noise_reduction: default
 # midi:
 #   port: 0
 #   channel: 1
-#   deviceName: "my device name"
+#   device_name: "my device name"
