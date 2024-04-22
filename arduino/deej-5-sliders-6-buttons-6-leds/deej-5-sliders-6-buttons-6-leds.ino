@@ -29,13 +29,13 @@ using namespace ace_button;
 Copy your config to your home dir: cp ~/go/pkg/mod/github.com/omriharel/deej@v0.9.10/config.yaml ~/
 Link the deej binary to your home dir: ln -s ~/go/pkg/mod/github.com/omriharel/deej@v0.9.10/deej-release ~/deej
 */
-#define CMD_DEEJ "./deej"
+#define CMD_DEEJ "sh -c \"killall deej ; ./deej\""
 /* WINDOWS:
 Add deej.exe to a folder that's in your systems path. Untested, let me know if it works.
 */
 //#define CMD_DEEJ "deej.exe"
 
-#define CMD_MEDIA_PLAYER "flatpak run com.plexamp.Plexamp" //command for your media pleyer of choice
+#define CMD_MEDIA_PLAYER "sh -c \"killall plexamp ; flatpak run com.plexamp.Plexamp\"" //command for your media pleyer of choice
 
 const int NUM_SLIDERS = 5;
 const int analogInputs[NUM_SLIDERS] = {A0, A1, A2, A3, A6};
